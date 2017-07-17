@@ -33,7 +33,7 @@ var time = (function() {
 // formatDuration formats d (in nanoseconds) with
 // a proper unit suffix based on its value.
 checkup.formatDuration = function(d) {
-	if (d == 0)
+	if (d === 0)
 		return d+"ms";
 	else if (d < time.Millisecond)
 		return Math.round(d*1e-3)+"µs";
@@ -57,7 +57,7 @@ checkup.leftpad = function(str, len, ch) {
 	len = len - str.length;
 	while (++i < len) str = ch + str;
 	return str;
-}
+};
 
 // timeSince renders the duration ms (in milliseconds) in human-friendly form.
 checkup.timeSince = function(ms) {
@@ -94,7 +94,7 @@ checkup.makeTimeTag = function(ms) {
 	return '<time class="dynamic" datetime="'+dateTimeString(ms)+'">'
 			+ checkup.timeSince(ms)
 			+ '</time>';
-}
+};
 
 // All check files must have this suffix.
 checkup.checkFileSuffix = "-check.json";
@@ -165,7 +165,7 @@ checkup.makeChart = function(title) {
 			med: [],
 			max: [],
 			threshold: [],
-			events: [],
+			events: []
 		},
 		data: []
 	};
@@ -175,25 +175,19 @@ checkup.makeChart = function(title) {
 	chart.data = [chart.series.threshold, chart.series.med];
 
 	return chart;
-}
+};
 
 // getJSON downloads the file at url and executes callback
 // with the parsed JSON and the url as arguments.
-checkup.getJSON = function(url, callback) {
-	var request = new XMLHttpRequest();
-	request.open('GET', url, true);
-	request.onload = function() {
-		if (request.status >= 200 && request.status < 400) {
-			var json = JSON.parse(request.responseText);
-			callback(json, url);
-		} else {
-			console.error("GET "+url+":", request);
+checkup.getJSON = function(file, bucket, callback) {
+	bucket.getObject({Key: file}, function(e,data) {
+		if (e) {
+		  console.error("Network error (GET "+url+"):", request.error);
 		}
-	};
-	request.onerror = function() {
-		console.error("Network error (GET "+url+"):", request.error);
-	};
-	request.send();
+		var json = JSON.parse(data.Body);
+		callback(json);
+	});
+
 };
 
 checkup.loadScript = function(url, callback) {
@@ -213,12 +207,12 @@ checkup.computeStats = function(result) {
 	function median(values) {
 		values.sort(function(a, b) { return a.rtt - b.rtt; });
 		var half = Math.floor(values.length / 2);
-		if (values.length % 2 == 0)
+		if (values.length % 2 === 0)
 			return Math.round((values[half-1].rtt + values[half].rtt) / 2);
 		else
 			return values[half].rtt;
 	}
-	var sum = 0, min, max;
+	var sum = 0, min = 0, max = 0;
 	for (var i = 0; i < result.times.length; i++) {
 		var attempt = result.times[i];
 		if (!attempt.rtt) continue;
